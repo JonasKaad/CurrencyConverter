@@ -1,4 +1,5 @@
 import * as React from 'react';
+import {useState, useEffect} from 'react';
 import {
   Button,
   Text,
@@ -14,26 +15,42 @@ import {
 } from 'react-native';
 import {NavigationContainer, useNavigation} from '@react-navigation/native';
 import {createStackNavigator} from '@react-navigation/stack';
-import type {PropsWithChildren} from 'react';
-import {Colors} from 'react-native/Libraries/NewAppScreen';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import BouncyCheckbox from 'react-native-bouncy-checkbox';
 import DropDownPicker from 'react-native-dropdown-picker';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import {NumericFormat} from 'react-number-format';
+const currencyNames = require('./data/currencies.json');
+const salesTaxes = require('./data/sales-tax.json');
 //let salesTax: boolean = false;
 
-function calculateConversion(inputValue: number, salesTax: boolean) {
-  let calc = inputValue * 7.45;
+function calculateConversion(
+  inputValue: number,
+  salesTax: boolean,
+  stateTax: string,
+) {
+  let calc = inputValue * 6.85;
   if (salesTax) {
-    calc = calc * 1.065;
+    calc = calc * (1 + salesTaxes[stateTax].rate);
   }
   return parseFloat(calc.toFixed(2));
 }
+const storeData = async value => {
+  try {
+    const jsonValue = JSON.stringify(value);
+    await AsyncStorage.setItem('@Exchange', jsonValue);
+  } catch (e) {
+    console.log(e);
+  }
+};
 
-//function addSalesTax(bool: boolean) {
-//  salesTax = bool;
-//}
-
-import {NumericFormat} from 'react-number-format';
+const getData = async () => {
+  try {
+    const jsonValue = await AsyncStorage.getItem('@Exchange');
+    const parsed = JSON.parse(jsonValue);
+    return parsed;
+  } catch (e) {}
+};
 
 export function ReactNativeNumberFormat({value}) {
   return (
@@ -49,50 +66,78 @@ export function ReactNativeNumberFormat({value}) {
     />
   );
 }
-
 function HomeScreen({navigation}) {
-  const [number, onChangeNumber] = React.useState('');
-  const [salesTax, setSalesTax] = React.useState(false);
-  const {exFrom} = React.useContext{GlobalContext}
+  const [number, onChangeNumber] = useState('');
+  const [salesTax, setSalesTax] = useState(false);
 
-  const [open, setOpen] = React.useState(false);
-  const [value, setValue] = React.useState(null);
-  const [items, setItems] = React.useState([
-    {label: 'Maryland - 6%', value: 'ma'},
-    {label: 'Washington - 6.5%', value: 'wa'},
-    {label: 'North Carolina - 5.75%', value: 'nc'},
-    {label: 'EWashington - 3.5%', value: 'waaa'},
-    {label: 'EE Carolina - 1.75%', value: 'ncaa'},
-    {label: 'AAWashington - 6.5%', value: 'wqa'},
-    {label: 'AANorth Carolina - 5.75%', value: 'nqc'},
-    {label: 'Washington - 6.5%', value: 'wea'},
-    {label: 'North Carolina - 5.75%', value: 'nec'},
-    {label: 'Washington - 6.5%', value: 'wda'},
-    {label: 'North Carolina - 5.75%', value: 'ncd'},
-    {label: 'Washington - 6.5%', value: 'wsa'},
-    {label: 'North Carolina - 5.75%', value: 'nsc'},
-    {label: 'Washington - 6.5%', value: 'wca'},
-    {label: 'North Carolina - 5.75%', value: 'ncc'},
-    {label: 'Washington - 6.5%', value: 'wav'},
-    {label: 'North Carolina - 5.75%', value: 'ncv'},
-    {label: 'Washington - 6.5%', value: 'wsxa'},
-    {label: 'North Carolina - 5.75%', value: 'nsxc'},
-    {label: 'Washington - 6.5%', value: 'waca'},
-    {label: 'North Carolina - 5.75%', value: 'nacc'},
-    {label: 'Washington - 6.5%', value: 'wzav'},
-    {label: 'North Carolina - 5.75%', value: 'nzcv'},
-    {label: 'Washington - 6.5%', value: 'wgsa'},
-    {label: 'North Carolina - 5.75%', value: 'ngsc'},
-    {label: 'Washington - 6.5%', value: 'wcja'},
-    {label: 'North Carolina - 5.75%', value: 'ncjc'},
-    {label: 'Washington - 6.5%', value: 'wlav'},
-    {label: 'North Carolina - 5.75%', value: 'nclv'},
-  ]);
+  const [lastUpdated, setUpdated] = useState('');
+  let TAXES = [];
+
+  Object.keys(salesTaxes).forEach(function (key) {
+    TAXES.push({
+      id: key,
+      label: key + ' - ' + (salesTaxes[key].rate * 100).toFixed(2) + '%',
+      value: key,
+      rate: salesTaxes[key].rate,
+    });
+  });
+
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState(null);
+  const [items, setItems] = useState(TAXES);
+
+  function updateTimeString(s) {
+    s =
+      'Last updated: ' +
+      s.substring(8, 10) +
+      s.substring(4, 8) +
+      s.substring(0, 4);
+    return s;
+  }
+
+  async function updateRates() {
+    try {
+      const url = 'https://cdn.forexvalutaomregner.dk/api/latest.json';
+      let response = await fetch(url);
+      let responseJson = await response.json();
+      //console.log(responseJson);
+      storeData(responseJson);
+
+      let s = responseJson.lastupdate;
+      setUpdated(updateTimeString(s));
+    } catch (error) {
+      console.error(error);
+    }
+  }
 
   function resetTextInput() {
     console.log('reset TextInput');
     onChangeNumber('');
   }
+
+  useEffect(setRatesUpdatedString, []);
+
+  function setRatesUpdatedString() {
+    try {
+      AsyncStorage.getItem('@Exchange').then(value => {
+        const parsed = JSON.parse(value);
+        if (value != null && !parsed.lastupdate != undefined) {
+          setUpdated(updateTimeString(parsed.lastupdate));
+        } else {
+          setUpdated('No rates found. Fetch now:');
+        }
+      });
+    } catch (e) {
+      console.error('Error with getting updated timestamp.' + e);
+    }
+  }
+
+  function checkValueIsNull(): boolean {
+    if (value == null) {
+      return true;
+    } else return false;
+  }
+
   return (
     <View style={styles.backgroundStyle}>
       <TextInput
@@ -110,7 +155,7 @@ function HomeScreen({navigation}) {
         <Text style={styles.text}>Reset</Text>
       </TouchableOpacity>
       <ReactNativeNumberFormat
-        value={calculateConversion(number, salesTax).toString()}
+        value={calculateConversion(number, salesTax, value).toString()}
       />
 
       <View style={styles.container}>
@@ -118,16 +163,14 @@ function HomeScreen({navigation}) {
           <Text style={styles.text}>Exchange From:</Text>
           <Button
             color="#362B21"
-            title="EUR"
+            title="USD"
             onPress={() => navigation.navigate('ExchangeFrom')}
           />
         </View>
 
         <View style={[{margin: 8}]}>
           <Text></Text>
-          <TouchableOpacity
-            onPress={console.log('hey')}
-            style={styles.exchangeStyle}>
+          <TouchableOpacity style={styles.exchangeStyle}>
             <Icon name="swap-horiz" color={'#fff'} size={34} />
           </TouchableOpacity>
         </View>
@@ -145,9 +188,10 @@ function HomeScreen({navigation}) {
           size={30}
           fillColor="#362B21"
           unfillColor="#FFFFFF"
-          text="Add sales tax"
+          text={checkValueIsNull() ? 'Choose state below' : 'Add sales tax'}
           iconStyle={{borderColor: 'blue'}}
           innerIconStyle={{borderWidth: 2}}
+          disabled={checkValueIsNull()}
           textStyle={{
             fontFamily: 'JosefinSans-Regular',
             textDecorationLine: 'none',
@@ -177,12 +221,12 @@ function HomeScreen({navigation}) {
       <View style={styles.ratesStyle}>
         <View style={[{width: '45%'}]}>
           <View style={styles.taxStyle}>
-            <Text style={styles.text}>Last updated: 28-03-2023</Text>
+            <Text style={styles.text}>{lastUpdated}</Text>
           </View>
           <Button
             color="#362B21"
             title="Update rates"
-            onPress={() => console.log('Updated!')}
+            onPress={() => updateRates()}
           />
         </View>
       </View>
@@ -209,28 +253,10 @@ type ItemProps = {
   newname: string;
 };
 
-const DATA = [
-  {
-    id: 'USD',
-    cur: 'USD',
-    name: 'United States Dollar',
-  },
-  {
-    id: 'AFN',
-    cur: 'AFN',
-    name: 'Afghan Afghani',
-  },
-  {
-    id: 'DKK',
-    cur: 'DKK',
-    name: 'Danish Krone',
-  },
-  {
-    id: 'BAM',
-    cur: 'BAM',
-    name: 'Bosnia-Herzegovina Convertible Mark',
-  },
-];
+/*
+Object.keys(currencyNames).forEach(function (key) {
+  DATA.push({id: key, cur: key, name: currencyNames[key]});
+});*/
 
 const Item = ({name, cur}: ItemProps) => (
   <View>
@@ -240,6 +266,33 @@ const Item = ({name, cur}: ItemProps) => (
   </View>
 );
 function ExchangeFromScreen(this: any, {navigation}) {
+  let DATA = [];
+
+  async function loadData() {
+    try {
+      let exNames = await getData();
+      if (exNames != null && exNames.rates != undefined) {
+        Object.keys(exNames.rates).forEach(function (key) {
+          DATA.push({id: key, cur: key, name: currencyNames[key]});
+        });
+      } else {
+        DATA.push({
+          id: 'no_rates',
+          cur: 'No rates found',
+          name: 'go fetch some!',
+        });
+      }
+    } catch (e) {
+      console.error(e);
+    }
+
+    /*
+    Object.keys(currencyNames).forEach(function (key) {
+      DATA.push({id: key, rcur: key, name: currencyNames[key]});
+    });*/
+  }
+  loadData();
+
   return (
     <FlatList
       data={DATA}

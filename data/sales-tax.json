@@ -1,0 +1,186 @@
+{
+  "Alabama": {
+    "rate": 0.04,
+    "type": "vat"
+  },
+  "Arkansas": {
+    "rate": 0.06,
+    "type": "vat"
+  },
+  "Arizona": {
+    "rate": 0.066,
+    "type": "vat"
+  },
+  "California": {
+    "rate": 0.0825,
+    "type": "vat"
+  },
+  "Colorado": {
+    "rate": 0.029,
+    "type": "vat"
+  },
+  "Connecticut": {
+    "rate": 0.06,
+    "type": "vat"
+  },
+  "Washington DC": {
+    "rate": 0.06,
+    "type": "vat"
+  },
+  "Florida": {
+    "rate": 0.06,
+    "type": "vat"
+  },
+  "Georgia": {
+    "rate": 0.04,
+    "type": "vat"
+  },
+  "Hawaii": {
+    "rate": 0.04,
+    "type": "vat"
+  },
+  "Iowa": {
+    "rate": 0.06,
+    "type": "vat"
+  },
+  "Idaho": {
+    "rate": 0.06,
+    "type": "vat"
+  },
+  "Illinois": {
+    "rate": 0.0625,
+    "type": "vat"
+  },
+  "Indiana": {
+    "rate": 0.07,
+    "type": "vat"
+  },
+  "Kansas": {
+    "rate": 0.063,
+    "type": "vat"
+  },
+  "Kentucky": {
+    "rate": 0.06,
+    "type": "vat"
+  },
+  "Louisiana": {
+    "rate": 0.04,
+    "type": "vat"
+  },
+  "Massachusetts": {
+    "rate": 0.0625,
+    "type": "vat"
+  },
+  "Maryland": {
+    "rate": 0.06,
+    "type": "vat"
+  },
+  "Maine": {
+    "rate": 0.05,
+    "type": "vat"
+  },
+  "Michigan": {
+    "rate": 0.06,
+    "type": "vat"
+  },
+  "Minnesota": {
+    "rate": 0.06875,
+    "type": "vat"
+  },
+  "Missouri": {
+    "rate": 0.04225,
+    "type": "vat"
+  },
+  "Mississippi": {
+    "rate": 0.07,
+    "type": "vat"
+  },
+  "North Carolina": {
+    "rate": 0.0575,
+    "type": "vat"
+  },
+  "North Dakota": {
+    "rate": 0.05,
+    "type": "vat"
+  },
+  "Nebraska": {
+    "rate": 0.055,
+    "type": "vat"
+  },
+  "New Jersey": {
+    "rate": 0.07,
+    "type": "vat"
+  },
+  "New Mexico": {
+    "rate": 0.05,
+    "type": "vat"
+  },
+  "Nevada": {
+    "rate": 0.0685,
+    "type": "vat"
+  },
+  "New York": {
+    "rate": 0.04,
+    "type": "vat"
+  },
+  "Ohio": {
+    "rate": 0.055,
+    "type": "vat"
+  },
+  "Oklahoma": {
+    "rate": 0.045,
+    "type": "vat"
+  },
+  "Pennsylvania": {
+    "rate": 0.06,
+    "type": "vat"
+  },
+  "Rhode Island": {
+    "rate": 0.07,
+    "type": "vat"
+  },
+  "South Carolina": {
+    "rate": 0.06,
+    "type": "vat"
+  },
+  "South Dakota": {
+    "rate": 0.04,
+    "type": "vat"
+  },
+  "Tennessee": {
+    "rate": 0.07,
+    "type": "vat"
+  },
+  "Texas": {
+    "rate": 0.0625,
+    "type": "vat"
+  },
+  "Utah": {
+    "rate": 0.0595,
+    "type": "vat"
+  },
+  "Virginia": {
+    "rate": 0.05,
+    "type": "vat"
+  },
+  "Vermont": {
+    "rate": 0.06,
+    "type": "vat"
+  },
+  "Washington": {
+    "rate": 0.065,
+    "type": "vat"
+  },
+  "Wisconsin": {
+    "rate": 0.05,
+    "type": "vat"
+  },
+  "West Virginia": {
+    "rate": 0.06,
+    "type": "vat"
+  },
+  "Wyoming": {
+    "rate": 0.04,
+    "type": "vat"
+  }
+}
