@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {useState, useEffect} from 'react';
+import {useState, useEffect, PureComponent, memo} from 'react';
 import {
   Button,
   Text,
@@ -20,25 +20,15 @@ import BouncyCheckbox from 'react-native-bouncy-checkbox';
 import DropDownPicker from 'react-native-dropdown-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {NumericFormat} from 'react-number-format';
+import Item from './Item';
 const currencyNames = require('./data/currencies.json');
 const salesTaxes = require('./data/sales-tax.json');
 //let salesTax: boolean = false;
 
-function calculateConversion(
-  inputValue: number,
-  salesTax: boolean,
-  stateTax: string,
-) {
-  let calc = inputValue * 6.85;
-  if (salesTax) {
-    calc = calc * (1 + salesTaxes[stateTax].rate);
-  }
-  return parseFloat(calc.toFixed(2));
-}
-const storeData = async value => {
+const storeData = async (value: any, key: string) => {
   try {
     const jsonValue = JSON.stringify(value);
-    await AsyncStorage.setItem('@Exchange', jsonValue);
+    await AsyncStorage.setItem(key, jsonValue);
   } catch (e) {
     console.log(e);
   }
@@ -52,7 +42,7 @@ const getData = async () => {
   } catch (e) {}
 };
 
-export function ReactNativeNumberFormat({value}) {
+export function ReactNativeNumberFormat({value}: any) {
   return (
     <NumericFormat
       value={value}
@@ -66,7 +56,7 @@ export function ReactNativeNumberFormat({value}) {
     />
   );
 }
-function HomeScreen({navigation}) {
+function HomeScreen({navigation}: any) {
   const [number, onChangeNumber] = useState('');
   const [salesTax, setSalesTax] = useState(false);
 
@@ -82,11 +72,32 @@ function HomeScreen({navigation}) {
     });
   });
 
+  const [output, setOutput] = useState(0);
+
+  async function calculateConversion(
+    inputValue: number,
+    salesTax: boolean,
+    stateTax: string,
+    currency: string,
+  ) {
+    let currencyData = await getData();
+
+    let currencyRate = currencyData.rates[currency];
+
+    let calc = inputValue * currencyRate;
+    if (salesTax) {
+      calc = calc * (1 + salesTaxes[stateTax].rate);
+    }
+    setOutput(parseFloat(calc.toFixed(2)));
+    //return parseFloat(calc.toFixed(2));
+  }
+
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState(null);
+  const [exchangeFrom, setExchangeFrom] = useState('');
   const [items, setItems] = useState(TAXES);
 
-  function updateTimeString(s) {
+  function updateTimeString(s: string) {
     s =
       'Last updated: ' +
       s.substring(8, 10) +
@@ -100,8 +111,7 @@ function HomeScreen({navigation}) {
       const url = 'https://cdn.forexvalutaomregner.dk/api/latest.json';
       let response = await fetch(url);
       let responseJson = await response.json();
-      //console.log(responseJson);
-      storeData(responseJson);
+      storeData(responseJson, '@Exchange');
 
       let s = responseJson.lastupdate;
       setUpdated(updateTimeString(s));
@@ -132,6 +142,22 @@ function HomeScreen({navigation}) {
     }
   }
 
+  useEffect(updateExchangeFrom, []);
+
+  function updateExchangeFrom() {
+    try {
+      AsyncStorage.getItem('@ExchangeFrom').then(value => {
+        if (value != null) {
+          setExchangeFrom(value.replaceAll('"', ''));
+        } else {
+          setExchangeFrom('EUR');
+        }
+      });
+    } catch (e) {
+      console.error('Error with getting updated timestamp.' + e);
+    }
+  }
+
   function checkValueIsNull(): boolean {
     if (value == null) {
       return true;
@@ -142,7 +168,10 @@ function HomeScreen({navigation}) {
     <View style={styles.backgroundStyle}>
       <TextInput
         style={styles.inputText}
-        onChangeText={number => onChangeNumber(number.replace(/[^0-9.]/g, ''))}
+        onChangeText={number => {
+          onChangeNumber(number.replace(/[^0-9.]/g, ''));
+          calculateConversion(number, salesTax, value, exchangeFrom).toString();
+        }}
         value={number}
         placeholder="Start typing..."
         placeholderTextColor="#b9b9b9"
@@ -154,16 +183,14 @@ function HomeScreen({navigation}) {
         }}>
         <Text style={styles.text}>Reset</Text>
       </TouchableOpacity>
-      <ReactNativeNumberFormat
-        value={calculateConversion(number, salesTax, value).toString()}
-      />
+      <ReactNativeNumberFormat value={output} />
 
       <View style={styles.container}>
         <View style={[{width: '25%', margin: 10}]}>
           <Text style={styles.text}>Exchange From:</Text>
           <Button
             color="#362B21"
-            title="USD"
+            title={exchangeFrom}
             onPress={() => navigation.navigate('ExchangeFrom')}
           />
         </View>
@@ -247,25 +274,7 @@ export function ExchangeButton(name: string, navigationDestination: string) {
   );
 }
 
-type ItemProps = {
-  cur: string;
-  name: string;
-  newname: string;
-};
-
-/*
-Object.keys(currencyNames).forEach(function (key) {
-  DATA.push({id: key, cur: key, name: currencyNames[key]});
-});*/
-
-const Item = ({name, cur}: ItemProps) => (
-  <View>
-    <View style={styles.item}>
-      <Text style={styles.title}>{cur + ' - ' + name}</Text>
-    </View>
-  </View>
-);
-function ExchangeFromScreen(this: any, {navigation}) {
+function ExchangeFromScreen(this: any, {navigation}: any) {
   let DATA = [];
 
   async function loadData() {
@@ -285,19 +294,22 @@ function ExchangeFromScreen(this: any, {navigation}) {
     } catch (e) {
       console.error(e);
     }
-
-    /*
-    Object.keys(currencyNames).forEach(function (key) {
-      DATA.push({id: key, rcur: key, name: currencyNames[key]});
-    });*/
   }
   loadData();
+
+  function storeExchangeFrom(data: string) {
+    storeData(data, '@ExchangeFrom');
+  }
 
   return (
     <FlatList
       data={DATA}
       renderItem={({item}) => (
-        <TouchableOpacity onPress={() => navigation.navigate('HomeScreen')}>
+        <TouchableOpacity
+          onPress={() => {
+            storeExchangeFrom(item.id);
+            navigation.navigate('HomeScreen');
+          }}>
           <View>
             <Item name={item.name} cur={item.cur} />
           </View>
@@ -309,7 +321,7 @@ function ExchangeFromScreen(this: any, {navigation}) {
   );
 }
 
-function ExchangeToScreen({navigation}) {
+function ExchangeToScreen({navigation}: any) {
   return (
     <View style={styles.backgroundStyle}>
       <Button
