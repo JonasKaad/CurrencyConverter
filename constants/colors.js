@@ -8,5 +8,5 @@ export default {
   LYNCH: '#697098',
   SHARK: '#242526',
   SHUTTLE_GREY: '#565E67',
-  BROWN: '#362B21',
+  BROWN: '#a14e00',
 };

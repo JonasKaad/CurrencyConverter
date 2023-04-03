@@ -22,7 +22,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import {NumericFormat} from 'react-number-format';
 import Item from './Item';
 import {createSlice, configureStore} from '@reduxjs/toolkit';
-
+import filter from 'lodash.filter';
 const currencyNames = require('./data/currencies.json');
 const salesTaxes = require('./data/sales-tax.json');
 
@@ -207,16 +207,6 @@ function HomeScreen({navigation}: any) {
     return s;
   }
 
-  function showSalesTax(value: string) {
-    if (currencyFromStore.getState().value == 'USD' || value == 'override') {
-      //showSalesTaxView(true);
-      return true;
-    } else {
-      //showSalesTaxView(false);
-      return false;
-    }
-  }
-
   async function updateRates() {
     try {
       const url = 'https://cdn.forexvalutaomregner.dk/api/latest.json';
@@ -232,7 +222,6 @@ function HomeScreen({navigation}: any) {
   }
 
   function resetTextInput() {
-    console.log('reset TextInput');
     onChangeNumber('');
   }
 
@@ -351,20 +340,25 @@ function HomeScreen({navigation}: any) {
 
   return (
     <View style={styles.backgroundStyle}>
-      <TextInput
-        style={styles.inputText}
-        onChangeText={number => onChangeNumber(number.replace(/[^0-9.]/g, ''))}
-        value={number}
-        placeholder="Start typing..."
-        placeholderTextColor="#b9b9b9"
-        keyboardType="numeric"
-        clearButtonMode="always"></TextInput>
-      <TouchableOpacity
-        onPress={() => {
-          resetTextInput();
-        }}>
-        <Text style={styles.text}>Reset</Text>
-      </TouchableOpacity>
+      <View style={styles.searchContainer}>
+        <TextInput
+          style={styles.inputStyle}
+          onChangeText={number =>
+            onChangeNumber(number.replace(/[^0-9.]/g, ''))
+          }
+          value={number}
+          placeholder="Start typing..."
+          placeholderTextColor="#b9b9b9"
+          keyboardType="numeric"
+        />
+        <TouchableOpacity
+          onPress={() => {
+            resetTextInput();
+          }}>
+          <Icon style={styles.clearIcon} name="cancel" size={26} color="#000" />
+        </TouchableOpacity>
+      </View>
+
       <ReactNativeNumberFormat
         value={calculateConversion(
           number,
@@ -378,7 +372,7 @@ function HomeScreen({navigation}: any) {
         <View style={[{width: '25%', margin: 10}]}>
           <Text style={styles.text}>Exchange From:</Text>
           <Button
-            color="#362B21"
+            color="#a14e00"
             title={exFromCurrency}
             onPress={() => navigation.navigate('ExchangeFrom')}
           />
@@ -393,7 +387,7 @@ function HomeScreen({navigation}: any) {
         <View style={[{width: '25%', margin: 10}]}>
           <Text style={styles.text}>Exchange To:</Text>
           <Button
-            color="#362B21"
+            color="#a14e00"
             title={exToCurrency}
             onPress={() => navigation.navigate('ExchangeTo')}
           />
@@ -403,7 +397,7 @@ function HomeScreen({navigation}: any) {
       <View style={styles.taxStyle}>
         <BouncyCheckbox
           size={30}
-          fillColor="#362B21"
+          fillColor="#a14e00"
           unfillColor="#FFFFFF"
           text={checkValueIsNull() ? 'Choose state below' : 'Add sales tax'}
           iconStyle={{borderColor: 'blue'}}
@@ -430,6 +424,19 @@ function HomeScreen({navigation}: any) {
             dropDownFunc(value);
           }}
           dropDownDirection="BOTTOM"
+          labelStyle={{
+            fontWeight: 'bold',
+            color: '#fff',
+          }}
+          listItemLabelStyle={{
+            color: '#fff',
+          }}
+          selectedItemContainerStyle={{
+            backgroundColor: '#683200',
+          }}
+          selectedItemLabelStyle={{
+            fontWeight: 'bold',
+          }}
           containerStyle={{
             width: '60%',
             marginTop: 10,
@@ -443,7 +450,7 @@ function HomeScreen({navigation}: any) {
             <Text style={styles.text}>{lastUpdated}</Text>
           </View>
           <Button
-            color="#362B21"
+            color="#a14e00"
             title="Update rates"
             onPress={() => updateRates()}
           />
@@ -501,10 +508,59 @@ function ExchangeFromScreen(this: any, {navigation}: any) {
   function storeExchangeFromRate(data: string) {
     storeData(data, '@ExchangeFromRate');
   }
+  const [data, setData] = useState(DATA);
+  const [fullData, setFullData] = useState(DATA);
+  const [query, setQuery] = useState('');
+
+  const handleSearch = text => {
+    const formattedQuery = text.toLowerCase();
+    const filteredData = filter(fullData, user => {
+      return contains(user, formattedQuery);
+    });
+    setData(filteredData);
+    setQuery(text);
+  };
+
+  const contains = ({name, id}, query) => {
+    if (
+      name.toLowerCase().includes(query) ||
+      id.toLowerCase().includes(query)
+    ) {
+      return true;
+    }
+
+    return false;
+  };
 
   return (
     <FlatList
-      data={DATA}
+      ListHeaderComponent={
+        <>
+          <View
+            style={{
+              padding: 10,
+              marginVertical: 10,
+              borderRadius: 20,
+            }}>
+            <TextInput
+              autoCapitalize="none"
+              autoCorrect={false}
+              clearButtonMode="always"
+              value={query}
+              onChangeText={queryText => handleSearch(queryText)}
+              placeholder="Search"
+              placeholderTextColor="#dadada"
+              style={{
+                backgroundColor: '#683200',
+                paddingHorizontal: 20,
+                fontSize: 20,
+                color: '#fff',
+              }}
+            />
+          </View>
+        </>
+      }
+      data={data}
       renderItem={({item}) => (
         <TouchableOpacity
           onPress={() => {
@@ -561,9 +617,60 @@ function ExchangeToScreen(this: any, {navigation}: any) {
     storeData(data, '@ExchangeToRate');
   }
 
+  const [data, setData] = useState(DATA);
+  const [fullData, setFullData] = useState(DATA);
+  const [query, setQuery] = useState('');
+
+  const handleSearch = text => {
+    const formattedQuery = text.toLowerCase();
+    const filteredData = filter(fullData, user => {
+      return contains(user, formattedQuery);
+    });
+    setData(filteredData);
+    setQuery(text);
+  };
+
+  const contains = ({name, id}, query) => {
+    if (
+      name.toLowerCase().includes(query) ||
+      id.toLowerCase().includes(query)
+    ) {
+      return true;
+    }
+
+    return false;
+  };
+
+  function renderHeader() {
+    return (
+      <View
+        style={{
+          padding: 10,
+          marginVertical: 10,
+          borderRadius: 20,
+        }}>
+        <TextInput
+          autoCapitalize="none"
+          autoCorrect={false}
+          clearButtonMode="always"
+          value={query}
+          onChangeText={queryText => handleSearch(queryText)}
+          placeholder="Search"
+          placeholderTextColor="#dadada"
+          style={{
+            backgroundColor: '#683200',
+            paddingHorizontal: 20,
+            color: '#fff',
+          }}
+        />
+      </View>
+    );
+  }
+
   return (
     <FlatList
-      data={DATA}
+      data={data}
+      ListHeaderComponent={renderHeader}
       renderItem={({item}) => (
         <TouchableOpacity
           onPress={() => {
@@ -591,7 +698,7 @@ function MyStack() {
     <Stack.Navigator
       screenOptions={{
         headerStyle: {
-          backgroundColor: '#362B21',
+          backgroundColor: '#a14e00',
         },
         headerTintColor: '#fff',
         headerTitleStyle: {
@@ -624,7 +731,7 @@ DropDownPicker.addTheme('MyThemeName', myTheme);
 DropDownPicker.setTheme('MyThemeName');
 DropDownPicker.setListMode('SCROLLVIEW'); //can be changed to MODAL
 
-StatusBar.setBackgroundColor('#362B21');
+StatusBar.setBackgroundColor('#a14e00');
 const styles = StyleSheet.create({
   backgroundStyle: {
     flex: 1,
@@ -680,6 +787,22 @@ const styles = StyleSheet.create({
   },
   text: {
     color: '#fff',
+  },
+  clearIcon: {
+    paddingTop: 28,
+    paddingRight: 20,
+    color: '#fff',
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    paddingBottom: 10,
+  },
+  inputStyle: {
+    color: '#fff',
+    fontSize: 26,
+    flex: 1,
+    margin: 12,
+    padding: 10,
   },
 });
 
