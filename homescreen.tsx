@@ -21,9 +21,103 @@ import DropDownPicker from 'react-native-dropdown-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {NumericFormat} from 'react-number-format';
 import Item from './Item';
+import {createSlice, configureStore} from '@reduxjs/toolkit';
+
 const currencyNames = require('./data/currencies.json');
 const salesTaxes = require('./data/sales-tax.json');
-//let salesTax: boolean = false;
+
+const exchangeFromCurrencySlice = createSlice({
+  name: 'exchangeFromCurrency',
+  initialState: {
+    value: ' ',
+  },
+  reducers: {
+    setExchangeFromText: (state, action) => {
+      state.value = action.payload;
+    },
+  },
+});
+
+const exchangeToCurrencySlice = createSlice({
+  name: 'exchangeToCurrency',
+  initialState: {
+    value: ' ',
+  },
+  reducers: {
+    setExchangeToText: (state, action) => {
+      state.value = action.payload;
+    },
+  },
+});
+
+const exchangeFromRateSlice = createSlice({
+  name: 'exchangeFromRate',
+  initialState: {
+    value: 0,
+  },
+  reducers: {
+    setExchangeFromRate: (state, action) => {
+      state.value = action.payload;
+    },
+  },
+});
+
+const exchangeToRateSlice = createSlice({
+  name: 'exchangeToRate',
+  initialState: {
+    value: 0,
+  },
+  reducers: {
+    setExchangeToRate: (state, action) => {
+      state.value = action.payload;
+    },
+  },
+});
+
+export const {setExchangeFromText} = exchangeFromCurrencySlice.actions;
+export const {setExchangeFromRate} = exchangeFromRateSlice.actions;
+export const {setExchangeToText} = exchangeToCurrencySlice.actions;
+export const {setExchangeToRate} = exchangeToRateSlice.actions;
+
+const rateFromStore = configureStore({
+  reducer: exchangeFromRateSlice.reducer,
+});
+
+const currencyFromStore = configureStore({
+  reducer: exchangeFromCurrencySlice.reducer,
+});
+
+const rateToStore = configureStore({
+  reducer: exchangeToRateSlice.reducer,
+});
+
+const currencyToStore = configureStore({
+  reducer: exchangeToCurrencySlice.reducer,
+});
+
+export const dispatchExchangeFromRate = (amount: any) => (dispatch: any) => {
+  setTimeout(() => {
+    dispatch(setExchangeFromRate(amount));
+  }, 100);
+};
+
+export const dispatchExchangeFromText = (amount: any) => (dispatch: any) => {
+  setTimeout(() => {
+    dispatch(setExchangeFromText(amount));
+  }, 100);
+};
+
+export const dispatchExchangeToRate = (amount: any) => (dispatch: any) => {
+  setTimeout(() => {
+    dispatch(setExchangeToRate(amount));
+  }, 100);
+};
+
+export const dispatchExchangeToText = (amount: any) => (dispatch: any) => {
+  setTimeout(() => {
+    dispatch(setExchangeToText(amount));
+  }, 100);
+};
 
 const storeData = async (value: any, key: string) => {
   try {
@@ -42,6 +136,22 @@ const getData = async () => {
   } catch (e) {}
 };
 
+function calculateConversion(
+  inputValue: number,
+  salesTax: boolean,
+  stateTax: string,
+  fromRate: number,
+  toRate: number,
+) {
+  if (inputValue.toString() != '') {
+    let calc = inputValue * (toRate / fromRate);
+    if (salesTax) {
+      calc = calc * (1 + salesTaxes[stateTax].rate);
+    }
+    return parseFloat(calc.toFixed(2));
+  } else return '';
+}
+
 export function ReactNativeNumberFormat({value}: any) {
   return (
     <NumericFormat
@@ -52,7 +162,7 @@ export function ReactNativeNumberFormat({value}: any) {
       prefix={''}
       renderText={formattedValue => (
         <Text style={styles.inputText}>{formattedValue}</Text>
-      )} // <--- Don't forget this!
+      )}
     />
   );
 }
@@ -72,31 +182,22 @@ function HomeScreen({navigation}: any) {
     });
   });
 
-  const [output, setOutput] = useState(0);
-
-  async function calculateConversion(
-    inputValue: number,
-    salesTax: boolean,
-    stateTax: string,
-    currency: string,
-  ) {
-    let currencyData = await getData();
-
-    let currencyRate = currencyData.rates[currency];
-
-    let calc = inputValue * currencyRate;
-    if (salesTax) {
-      calc = calc * (1 + salesTaxes[stateTax].rate);
-    }
-    setOutput(parseFloat(calc.toFixed(2)));
-    //return parseFloat(calc.toFixed(2));
-  }
-
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState(null);
-  const [exchangeFrom, setExchangeFrom] = useState('');
   const [items, setItems] = useState(TAXES);
+  const [exFromCurrency, setExFromCurrency] = useState('');
+  const [exToCurrency, setExToCurrency] = useState('');
+  const [exFromRate, setExFromRate] = useState(0);
+  const [exToRate, setExToRate] = useState(0);
 
+  currencyFromStore.subscribe(() =>
+    setExFromCurrency(currencyFromStore.getState().value),
+  );
+  currencyToStore.subscribe(() =>
+    setExToCurrency(currencyToStore.getState().value),
+  );
+  rateFromStore.subscribe(() => setExFromRate(rateFromStore.getState().value));
+  rateToStore.subscribe(() => setExToRate(rateToStore.getState().value));
   function updateTimeString(s: string) {
     s =
       'Last updated: ' +
@@ -104,6 +205,16 @@ function HomeScreen({navigation}: any) {
       s.substring(4, 8) +
       s.substring(0, 4);
     return s;
+  }
+
+  function showSalesTax(value: string) {
+    if (currencyFromStore.getState().value == 'USD' || value == 'override') {
+      //showSalesTaxView(true);
+      return true;
+    } else {
+      //showSalesTaxView(false);
+      return false;
+    }
   }
 
   async function updateRates() {
@@ -142,15 +253,51 @@ function HomeScreen({navigation}: any) {
     }
   }
 
-  useEffect(updateExchangeFrom, []);
+  useEffect(fetchLastUsed, []);
 
-  function updateExchangeFrom() {
+  function fetchLastUsed() {
     try {
       AsyncStorage.getItem('@ExchangeFrom').then(value => {
         if (value != null) {
-          setExchangeFrom(value.replaceAll('"', ''));
+          setExFromCurrency(value.replaceAll('"', ''));
         } else {
-          setExchangeFrom('EUR');
+          setExFromCurrency('NONE');
+        }
+      });
+      AsyncStorage.getItem('@ExchangeFromRate').then(value => {
+        if (value != null) {
+          setExFromRate(value.replaceAll('"', ''));
+        } else {
+          setExFromRate(0);
+        }
+      });
+    } catch (e) {
+      console.error('Error with getting updated timestamp.' + e);
+    }
+    try {
+      AsyncStorage.getItem('@ExchangeTo').then(value => {
+        if (value != null) {
+          setExToCurrency(value.replaceAll('"', ''));
+        } else {
+          setExToCurrency('NONE');
+        }
+      });
+      AsyncStorage.getItem('@ExchangeToRate').then(value => {
+        if (value != null) {
+          setExToRate(value.replaceAll('"', ''));
+        } else {
+          setExToRate(0);
+        }
+      });
+    } catch (e) {
+      console.error('Error with getting updated timestamp.' + e);
+    }
+    try {
+      AsyncStorage.getItem('@StateTax').then(value => {
+        if (value != null) {
+          setValue(value.replaceAll('"', ''));
+        } else {
+          setValue(null);
         }
       });
     } catch (e) {
@@ -164,40 +311,82 @@ function HomeScreen({navigation}: any) {
     } else return false;
   }
 
+  function swapCurrency() {
+    function storeExchangeFrom(data: string) {
+      storeData(data, '@ExchangeFrom');
+    }
+    function storeExchangeFromRate(data: string) {
+      storeData(data, '@ExchangeFromRate');
+    }
+    function storeExchangeTo(data: string) {
+      storeData(data, '@ExchangeTo');
+    }
+    function storeExchangeToRate(data: string) {
+      storeData(data, '@ExchangeToRate');
+    }
+
+    let tempExFromRate = exFromRate;
+    let tempExFromCurr = exFromCurrency;
+    let tempExToRate = exToRate;
+    let tempExToCurr = exToCurrency;
+    setSalesTax(false);
+
+    rateFromStore.dispatch(dispatchExchangeFromRate(tempExToRate));
+    currencyFromStore.dispatch(dispatchExchangeFromText(tempExToCurr));
+    rateToStore.dispatch(dispatchExchangeToRate(tempExFromRate));
+    currencyToStore.dispatch(dispatchExchangeToText(tempExFromCurr));
+    storeExchangeFrom(tempExToCurr);
+    storeExchangeFromRate(tempExToRate);
+    storeExchangeTo(tempExFromCurr);
+    storeExchangeToRate(tempExFromRate);
+  }
+
+  function dropDownFunc(value: string) {
+    function storeStateTax(data: string) {
+      storeData(data, '@StateTax');
+    }
+
+    storeStateTax(value);
+  }
+
   return (
     <View style={styles.backgroundStyle}>
       <TextInput
         style={styles.inputText}
-        onChangeText={number => {
-          onChangeNumber(number.replace(/[^0-9.]/g, ''));
-          calculateConversion(number, salesTax, value, exchangeFrom).toString();
-        }}
+        onChangeText={number => onChangeNumber(number.replace(/[^0-9.]/g, ''))}
         value={number}
         placeholder="Start typing..."
         placeholderTextColor="#b9b9b9"
         keyboardType="numeric"
-      />
+        clearButtonMode="always"></TextInput>
       <TouchableOpacity
         onPress={() => {
           resetTextInput();
         }}>
         <Text style={styles.text}>Reset</Text>
       </TouchableOpacity>
-      <ReactNativeNumberFormat value={output} />
-
+      <ReactNativeNumberFormat
+        value={calculateConversion(
+          number,
+          salesTax,
+          value,
+          exFromRate,
+          exToRate,
+        ).toString()}
+      />
       <View style={styles.container}>
         <View style={[{width: '25%', margin: 10}]}>
           <Text style={styles.text}>Exchange From:</Text>
           <Button
             color="#362B21"
-            title={exchangeFrom}
+            title={exFromCurrency}
             onPress={() => navigation.navigate('ExchangeFrom')}
           />
         </View>
 
         <View style={[{margin: 8}]}>
           <Text></Text>
-          <TouchableOpacity style={styles.exchangeStyle}>
+          <TouchableOpacity style={styles.exchangeStyle} onPress={swapCurrency}>
             <Icon name="swap-horiz" color={'#fff'} size={34} />
           </TouchableOpacity>
         </View>
@@ -205,11 +394,12 @@ function HomeScreen({navigation}: any) {
           <Text style={styles.text}>Exchange To:</Text>
           <Button
             color="#362B21"
-            title="DKK"
+            title={exToCurrency}
             onPress={() => navigation.navigate('ExchangeTo')}
           />
         </View>
       </View>
+
       <View style={styles.taxStyle}>
         <BouncyCheckbox
           size={30}
@@ -236,6 +426,9 @@ function HomeScreen({navigation}: any) {
           setOpen={setOpen}
           setValue={setValue}
           setItems={setItems}
+          onChangeValue={value => {
+            dropDownFunc(value);
+          }}
           dropDownDirection="BOTTOM"
           containerStyle={{
             width: '60%',
@@ -244,7 +437,6 @@ function HomeScreen({navigation}: any) {
           }}
         />
       </View>
-
       <View style={styles.ratesStyle}>
         <View style={[{width: '45%'}]}>
           <View style={styles.taxStyle}>
@@ -282,12 +474,18 @@ function ExchangeFromScreen(this: any, {navigation}: any) {
       let exNames = await getData();
       if (exNames != null && exNames.rates != undefined) {
         Object.keys(exNames.rates).forEach(function (key) {
-          DATA.push({id: key, cur: key, name: currencyNames[key]});
+          DATA.push({
+            id: key,
+            cur: key,
+            rate: exNames.rates[key],
+            name: currencyNames[key],
+          });
         });
       } else {
         DATA.push({
           id: 'no_rates',
           cur: 'No rates found',
+          rate: '',
           name: 'go fetch some!',
         });
       }
@@ -300,6 +498,9 @@ function ExchangeFromScreen(this: any, {navigation}: any) {
   function storeExchangeFrom(data: string) {
     storeData(data, '@ExchangeFrom');
   }
+  function storeExchangeFromRate(data: string) {
+    storeData(data, '@ExchangeFromRate');
+  }
 
   return (
     <FlatList
@@ -308,6 +509,9 @@ function ExchangeFromScreen(this: any, {navigation}: any) {
         <TouchableOpacity
           onPress={() => {
             storeExchangeFrom(item.id);
+            storeExchangeFromRate(item.rate);
+            rateFromStore.dispatch(dispatchExchangeFromRate(item.rate));
+            currencyFromStore.dispatch(dispatchExchangeFromText(item.id));
             navigation.navigate('HomeScreen');
           }}>
           <View>
@@ -321,15 +525,62 @@ function ExchangeFromScreen(this: any, {navigation}: any) {
   );
 }
 
-function ExchangeToScreen({navigation}: any) {
+function ExchangeToScreen(this: any, {navigation}: any) {
+  let DATA = [];
+
+  async function loadData() {
+    try {
+      let exNames = await getData();
+      if (exNames != null && exNames.rates != undefined) {
+        Object.keys(exNames.rates).forEach(function (key) {
+          DATA.push({
+            id: key,
+            cur: key,
+            rate: exNames.rates[key],
+            name: currencyNames[key],
+          });
+        });
+      } else {
+        DATA.push({
+          id: 'no_rates',
+          cur: 'No rates found',
+          rate: '',
+          name: 'go fetch some!',
+        });
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+  loadData();
+
+  function storeExchangeTo(data: string) {
+    storeData(data, '@ExchangeTo');
+  }
+  function storeExchangeToRate(data: string) {
+    storeData(data, '@ExchangeToRate');
+  }
+
   return (
-    <View style={styles.backgroundStyle}>
-      <Button
-        title="Go to Home"
-        onPress={() => navigation.navigate('HomeScreen')}
-      />
-      <Button title="Go back" onPress={() => navigation.goBack()} />
-    </View>
+    <FlatList
+      data={DATA}
+      renderItem={({item}) => (
+        <TouchableOpacity
+          onPress={() => {
+            storeExchangeTo(item.id);
+            storeExchangeToRate(item.rate);
+            rateToStore.dispatch(dispatchExchangeToRate(item.rate));
+            currencyToStore.dispatch(dispatchExchangeToText(item.id));
+            navigation.navigate('HomeScreen');
+          }}>
+          <View>
+            <Item name={item.name} cur={item.cur} />
+          </View>
+        </TouchableOpacity>
+      )}
+      keyExtractor={item => item.id}
+      style={styles.flatListStyle}
+    />
   );
 }
 
