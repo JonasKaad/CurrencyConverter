@@ -1,15 +1,12 @@
 import * as React from 'react';
-import {useState, useEffect, PureComponent, memo} from 'react';
+import {useState, useEffect} from 'react';
 import {
   Button,
   Text,
   View,
   StyleSheet,
-  useColorScheme,
-  TouchableHighlight,
   FlatList,
   StatusBar,
-  TouchableWithoutFeedback,
   TouchableOpacity,
   TextInput,
 } from 'react-native';
@@ -124,7 +121,7 @@ const storeData = async (value: any, key: string) => {
     const jsonValue = JSON.stringify(value);
     await AsyncStorage.setItem(key, jsonValue);
   } catch (e) {
-    console.log(e);
+    console.error(e);
   }
 };
 
@@ -512,7 +509,7 @@ function ExchangeFromScreen(this: any, {navigation}: any) {
   const [fullData, setFullData] = useState(DATA);
   const [query, setQuery] = useState('');
 
-  const handleSearch = text => {
+  const handleSearch = (text: string) => {
     const formattedQuery = text.toLowerCase();
     const filteredData = filter(fullData, user => {
       return contains(user, formattedQuery);
@@ -521,7 +518,7 @@ function ExchangeFromScreen(this: any, {navigation}: any) {
     setQuery(text);
   };
 
-  const contains = ({name, id}, query) => {
+  const contains = ({name, id}: any, query: string) => {
     if (
       name.toLowerCase().includes(query) ||
       id.toLowerCase().includes(query)
@@ -621,7 +618,7 @@ function ExchangeToScreen(this: any, {navigation}: any) {
   const [fullData, setFullData] = useState(DATA);
   const [query, setQuery] = useState('');
 
-  const handleSearch = text => {
+  const handleSearch = (text: string) => {
     const formattedQuery = text.toLowerCase();
     const filteredData = filter(fullData, user => {
       return contains(user, formattedQuery);
@@ -630,7 +627,7 @@ function ExchangeToScreen(this: any, {navigation}: any) {
     setQuery(text);
   };
 
-  const contains = ({name, id}, query) => {
+  const contains = ({name, id}: any, query: string) => {
     if (
       name.toLowerCase().includes(query) ||
       id.toLowerCase().includes(query)
@@ -641,36 +638,35 @@ function ExchangeToScreen(this: any, {navigation}: any) {
     return false;
   };
 
-  function renderHeader() {
-    return (
-      <View
-        style={{
-          padding: 10,
-          marginVertical: 10,
-          borderRadius: 20,
-        }}>
-        <TextInput
-          autoCapitalize="none"
-          autoCorrect={false}
-          clearButtonMode="always"
-          value={query}
-          onChangeText={queryText => handleSearch(queryText)}
-          placeholder="Search"
-          placeholderTextColor="#dadada"
-          style={{
-            backgroundColor: '#683200',
-            paddingHorizontal: 20,
-            color: '#fff',
-          }}
-        />
-      </View>
-    );
-  }
-
   return (
     <FlatList
+      ListHeaderComponent={
+        <>
+          <View
+            style={{
+              padding: 10,
+              marginVertical: 10,
+              borderRadius: 20,
+            }}>
+            <TextInput
+              autoCapitalize="none"
+              autoCorrect={false}
+              clearButtonMode="always"
+              value={query}
+              onChangeText={queryText => handleSearch(queryText)}
+              placeholder="Search"
+              placeholderTextColor="#dadada"
+              style={{
+                backgroundColor: '#683200',
+                paddingHorizontal: 20,
+                fontSize: 20,
+                color: '#fff',
+              }}
+            />
+          </View>
+        </>
+      }
       data={data}
-      ListHeaderComponent={renderHeader}
       renderItem={({item}) => (
         <TouchableOpacity
           onPress={() => {
