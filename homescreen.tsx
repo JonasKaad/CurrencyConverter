@@ -20,6 +20,8 @@ import {NumericFormat} from 'react-number-format';
 import Item from './Item';
 import {createSlice, configureStore} from '@reduxjs/toolkit';
 import filter from 'lodash.filter';
+import {Dropdown} from 'react-native-element-dropdown';
+import RenderItem from './RenderItem';
 const currencyNames = require('./data/currencies.json');
 const salesTaxes = require('./data/sales-tax.json');
 
@@ -179,9 +181,6 @@ function HomeScreen({navigation}: any) {
     });
   });
 
-  const [open, setOpen] = useState(false);
-  const [value, setValue] = useState(null);
-  const [items, setItems] = useState(TAXES);
   const [exFromCurrency, setExFromCurrency] = useState('');
   const [exToCurrency, setExToCurrency] = useState('');
   const [exFromRate, setExFromRate] = useState(0);
@@ -331,9 +330,14 @@ function HomeScreen({navigation}: any) {
     function storeStateTax(data: string) {
       storeData(data, '@StateTax');
     }
+    setValue(value);
 
     storeStateTax(value);
   }
+
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState(null);
+  const [items, setItems] = useState(TAXES);
 
   return (
     <View style={styles.backgroundStyle}>
@@ -390,54 +394,48 @@ function HomeScreen({navigation}: any) {
           />
         </View>
       </View>
-
-      <View style={styles.taxStyle}>
-        <BouncyCheckbox
-          size={30}
-          fillColor="#a14e00"
-          unfillColor="#FFFFFF"
-          text={checkValueIsNull() ? 'Choose state below' : 'Add sales tax'}
-          iconStyle={{borderColor: 'blue'}}
-          innerIconStyle={{borderWidth: 2}}
-          disabled={checkValueIsNull()}
-          textStyle={{
-            fontFamily: 'JosefinSans-Regular',
-            textDecorationLine: 'none',
-            color: '#fff',
-            fontSize: 18,
-          }}
-          onPress={(isChecked: boolean) => {
-            setSalesTax(isChecked);
-          }}
-        />
-        <DropDownPicker
-          open={open}
+      <View>
+        <View style={styles.taxStyle}>
+          <BouncyCheckbox
+            size={30}
+            fillColor="#a14e00"
+            unfillColor="#FFFFFF"
+            text={checkValueIsNull() ? 'Choose state below' : 'Add sales tax'}
+            iconStyle={{borderColor: 'blue'}}
+            innerIconStyle={{borderWidth: 2}}
+            disabled={checkValueIsNull()}
+            textStyle={{
+              fontFamily: 'JosefinSans-Regular',
+              textDecorationLine: 'none',
+              color: '#fff',
+              fontSize: 18,
+            }}
+            onPress={(isChecked: boolean) => {
+              setSalesTax(isChecked);
+            }}
+          />
+        </View>
+        <Dropdown
+          style={styles.dropdown}
+          placeholderStyle={styles.placeholderStyle}
+          selectedTextStyle={styles.selectedTextStyle}
+          inputSearchStyle={styles.inputSearchStyle}
+          containerStyle={styles.dropdownContainer}
+          itemContainerStyle={styles.placeholderStyle}
+          itemTextStyle={{color: '#fff'}}
+          data={items}
+          autoScroll={false}
+          search
+          maxHeight={300}
+          activeColor="#683200"
+          iconColor="#fff"
+          labelField="label"
+          valueField="value"
+          placeholder="Select item"
+          searchPlaceholder="Search..."
           value={value}
-          items={items}
-          setOpen={setOpen}
-          setValue={setValue}
-          setItems={setItems}
-          onChangeValue={value => {
-            dropDownFunc(value);
-          }}
-          dropDownDirection="BOTTOM"
-          labelStyle={{
-            fontWeight: 'bold',
-            color: '#fff',
-          }}
-          listItemLabelStyle={{
-            color: '#fff',
-          }}
-          selectedItemContainerStyle={{
-            backgroundColor: '#683200',
-          }}
-          selectedItemLabelStyle={{
-            fontWeight: 'bold',
-          }}
-          containerStyle={{
-            width: '60%',
-            marginTop: 10,
-            marginBottom: 160,
+          onChange={item => {
+            dropDownFunc(item.value);
           }}
         />
       </View>
@@ -469,6 +467,43 @@ export function ExchangeButton(name: string, navigationDestination: string) {
     </View>
   );
 }
+
+/*
+<DropDownPicker
+          open={open}
+          value={value}
+          items={items}
+          setOpen={setOpen}
+          setValue={setValue}
+          setItems={setItems}
+          listMode="SCROLLVIEW"
+          scrollViewProps={{
+            nestedScrollEnabled: true,
+          }}
+          modalAnimationType="slide"
+          onChangeValue={value => {
+            dropDownFunc(value);
+          }}
+          dropDownDirection="BOTTOM"
+          labelStyle={{
+            fontWeight: 'bold',
+            color: '#fff',
+          }}
+          listItemLabelStyle={{
+            color: '#fff',
+          }}
+          selectedItemContainerStyle={{
+            backgroundColor: '#683200',
+          }}
+          selectedItemLabelStyle={{
+            fontWeight: 'bold',
+          }}
+          containerStyle={{
+            width: '60%',
+            marginTop: 10,
+            marginBottom: 160,
+          }}
+        />*/
 
 function ExchangeFromScreen(this: any, {navigation}: any) {
   let DATA = [];
@@ -799,6 +834,42 @@ const styles = StyleSheet.create({
     flex: 1,
     margin: 12,
     padding: 10,
+  },
+  dropdown: {
+    margin: 16,
+    height: 50,
+    backgroundColor: '#a14e00',
+    borderRadius: 12,
+    padding: 12,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.2,
+    color: '#fff',
+    shadowRadius: 1.41,
+
+    elevation: 2,
+  },
+  dropdownContainer: {
+    backgroundColor: '#a14e00',
+  },
+  placeholderStyle: {
+    fontSize: 16,
+    color: '#dadada',
+  },
+  selectedTextStyle: {
+    fontSize: 16,
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  inputSearchStyle: {
+    height: 40,
+    fontSize: 16,
+    color: '#fff',
+    backgroundColor: '#683200',
+    borderColor: 'black',
   },
 });
 
