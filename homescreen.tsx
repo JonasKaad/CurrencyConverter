@@ -22,6 +22,7 @@ import {createSlice, configureStore} from '@reduxjs/toolkit';
 import filter from 'lodash.filter';
 import {Dropdown} from 'react-native-element-dropdown';
 import RenderItem from './RenderItem';
+import AppButton from './AppButton';
 const currencyNames = require('./data/currencies.json');
 const salesTaxes = require('./data/sales-tax.json');
 
@@ -370,12 +371,11 @@ function HomeScreen({navigation}: any) {
         ).toString()}
       />
       <View style={styles.container}>
-        <View style={[{width: '25%', margin: 10}]}>
+        <View style={[{width: '30%', margin: 10}]}>
           <Text style={styles.text}>Exchange From:</Text>
-          <Button
-            color="#a14e00"
-            title={exFromCurrency}
+          <AppButton
             onPress={() => navigation.navigate('ExchangeFrom')}
+            title={exFromCurrency}
           />
         </View>
 
@@ -385,12 +385,11 @@ function HomeScreen({navigation}: any) {
             <Icon name="swap-horiz" color={'#fff'} size={34} />
           </TouchableOpacity>
         </View>
-        <View style={[{width: '25%', margin: 10}]}>
+        <View style={[{width: '30%', margin: 10}]}>
           <Text style={styles.text}>Exchange To:</Text>
-          <Button
-            color="#a14e00"
-            title={exToCurrency}
+          <AppButton
             onPress={() => navigation.navigate('ExchangeTo')}
+            title={exToCurrency}
           />
         </View>
       </View>
@@ -421,7 +420,6 @@ function HomeScreen({navigation}: any) {
           selectedTextStyle={styles.selectedTextStyle}
           inputSearchStyle={styles.inputSearchStyle}
           containerStyle={styles.dropdownContainer}
-          itemContainerStyle={styles.placeholderStyle}
           itemTextStyle={{color: '#fff'}}
           data={items}
           autoScroll={false}
@@ -440,15 +438,11 @@ function HomeScreen({navigation}: any) {
         />
       </View>
       <View style={styles.ratesStyle}>
-        <View style={[{width: '45%'}]}>
+        <View style={[{width: '50%'}]}>
           <View style={styles.taxStyle}>
             <Text style={styles.text}>{lastUpdated}</Text>
           </View>
-          <Button
-            color="#a14e00"
-            title="Update rates"
-            onPress={() => updateRates()}
-          />
+          <AppButton title="Update Rates" onPress={() => updateRates()} />
         </View>
       </View>
     </View>
@@ -467,43 +461,6 @@ export function ExchangeButton(name: string, navigationDestination: string) {
     </View>
   );
 }
-
-/*
-<DropDownPicker
-          open={open}
-          value={value}
-          items={items}
-          setOpen={setOpen}
-          setValue={setValue}
-          setItems={setItems}
-          listMode="SCROLLVIEW"
-          scrollViewProps={{
-            nestedScrollEnabled: true,
-          }}
-          modalAnimationType="slide"
-          onChangeValue={value => {
-            dropDownFunc(value);
-          }}
-          dropDownDirection="BOTTOM"
-          labelStyle={{
-            fontWeight: 'bold',
-            color: '#fff',
-          }}
-          listItemLabelStyle={{
-            color: '#fff',
-          }}
-          selectedItemContainerStyle={{
-            backgroundColor: '#683200',
-          }}
-          selectedItemLabelStyle={{
-            fontWeight: 'bold',
-          }}
-          containerStyle={{
-            width: '60%',
-            marginTop: 10,
-            marginBottom: 160,
-          }}
-        />*/
 
 function ExchangeFromScreen(this: any, {navigation}: any) {
   let DATA = [];
@@ -566,12 +523,14 @@ function ExchangeFromScreen(this: any, {navigation}: any) {
 
   return (
     <FlatList
+      stickyHeaderIndices={[0]}
       ListHeaderComponent={
         <>
           <View
             style={{
+              backgroundColor: '#1E1E1E',
               padding: 10,
-              marginVertical: 10,
+              marginBottom: 10,
               borderRadius: 20,
             }}>
             <TextInput
@@ -675,12 +634,14 @@ function ExchangeToScreen(this: any, {navigation}: any) {
 
   return (
     <FlatList
+      stickyHeaderIndices={[0]}
       ListHeaderComponent={
         <>
           <View
             style={{
+              backgroundColor: '#1E1E1E',
               padding: 10,
-              marginVertical: 10,
+              marginBottom: 10,
               borderRadius: 20,
             }}>
             <TextInput
@@ -838,6 +799,8 @@ const styles = StyleSheet.create({
   dropdown: {
     margin: 16,
     height: 50,
+    alignSelf: 'center',
+    width: '67%',
     backgroundColor: '#a14e00',
     borderRadius: 12,
     padding: 12,
@@ -849,18 +812,20 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     color: '#fff',
     shadowRadius: 1.41,
-
     elevation: 2,
   },
+  dropdownView: {},
   dropdownContainer: {
     backgroundColor: '#a14e00',
+    borderColor: '#683200',
+    borderRadius: 12,
   },
   placeholderStyle: {
-    fontSize: 16,
+    fontSize: 18,
     color: '#dadada',
   },
   selectedTextStyle: {
-    fontSize: 16,
+    fontSize: 18,
     color: '#fff',
     fontWeight: 'bold',
   },
@@ -869,7 +834,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#fff',
     backgroundColor: '#683200',
-    borderColor: 'black',
+    borderRadius: 12,
+    borderColor: '#683200',
   },
 });
 
