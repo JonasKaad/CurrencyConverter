@@ -10,19 +10,18 @@ import {
   TouchableOpacity,
   TextInput,
 } from 'react-native';
-import {NavigationContainer, useNavigation} from '@react-navigation/native';
+import {NavigationContainer} from '@react-navigation/native';
 import {createStackNavigator} from '@react-navigation/stack';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import BouncyCheckbox from 'react-native-bouncy-checkbox';
 import DropDownPicker from 'react-native-dropdown-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {NumericFormat} from 'react-number-format';
-import Item from './Item';
+import Item from './components/Item';
 import {createSlice, configureStore} from '@reduxjs/toolkit';
 import filter from 'lodash.filter';
 import {Dropdown} from 'react-native-element-dropdown';
-import RenderItem from './RenderItem';
-import AppButton from './AppButton';
+import AppButton from './components/AppButton';
 const currencyNames = require('./data/currencies.json');
 const salesTaxes = require('./data/sales-tax.json');
 
@@ -169,7 +168,6 @@ export function ReactNativeNumberFormat({value}: any) {
 function HomeScreen({navigation}: any) {
   const [number, onChangeNumber] = useState('');
   const [salesTax, setSalesTax] = useState(false);
-
   const [lastUpdated, setUpdated] = useState('');
   let TAXES = [];
 
@@ -315,7 +313,6 @@ function HomeScreen({navigation}: any) {
     let tempExFromCurr = exFromCurrency;
     let tempExToRate = exToRate;
     let tempExToCurr = exToCurrency;
-    setSalesTax(false);
 
     rateFromStore.dispatch(dispatchExchangeFromRate(tempExToRate));
     currencyFromStore.dispatch(dispatchExchangeFromText(tempExToCurr));
@@ -336,7 +333,6 @@ function HomeScreen({navigation}: any) {
     storeStateTax(value);
   }
 
-  const [open, setOpen] = useState(false);
   const [value, setValue] = useState(null);
   const [items, setItems] = useState(TAXES);
 
@@ -372,7 +368,9 @@ function HomeScreen({navigation}: any) {
       />
       <View style={styles.container}>
         <View style={[{width: '30%', margin: 10}]}>
-          <Text style={styles.text}>Exchange From:</Text>
+          <View style={[{alignSelf: 'center'}]}>
+            <Text style={styles.text}>Exchange From:</Text>
+          </View>
           <AppButton
             onPress={() => navigation.navigate('ExchangeFrom')}
             title={exFromCurrency}
@@ -386,7 +384,9 @@ function HomeScreen({navigation}: any) {
           </TouchableOpacity>
         </View>
         <View style={[{width: '30%', margin: 10}]}>
-          <Text style={styles.text}>Exchange To:</Text>
+          <View style={[{alignSelf: 'center'}]}>
+            <Text style={styles.text}>Exchange To:</Text>
+          </View>
           <AppButton
             onPress={() => navigation.navigate('ExchangeTo')}
             title={exToCurrency}
@@ -445,19 +445,6 @@ function HomeScreen({navigation}: any) {
           <AppButton title="Update Rates" onPress={() => updateRates()} />
         </View>
       </View>
-    </View>
-  );
-}
-export function ExchangeButton(name: string, navigationDestination: string) {
-  const navigation = useNavigation();
-
-  return (
-    <View style={[{width: '25%', margin: 10}]}>
-      <Text style={styles.text}>Exchange From:</Text>
-      <Button
-        title={name}
-        onPress={() => navigation.navigate(navigationDestination)}
-      />
     </View>
   );
 }
@@ -539,7 +526,7 @@ function ExchangeFromScreen(this: any, {navigation}: any) {
               clearButtonMode="always"
               value={query}
               onChangeText={queryText => handleSearch(queryText)}
-              placeholder="Search"
+              placeholder="Search..."
               placeholderTextColor="#dadada"
               style={{
                 backgroundColor: '#683200',
@@ -650,7 +637,7 @@ function ExchangeToScreen(this: any, {navigation}: any) {
               clearButtonMode="always"
               value={query}
               onChangeText={queryText => handleSearch(queryText)}
-              placeholder="Search"
+              placeholder="Search..."
               placeholderTextColor="#dadada"
               style={{
                 backgroundColor: '#683200',
@@ -689,6 +676,7 @@ function MyStack() {
   return (
     <Stack.Navigator
       screenOptions={{
+        presentation: 'transparentModal',
         headerStyle: {
           backgroundColor: '#a14e00',
         },
@@ -783,7 +771,7 @@ const styles = StyleSheet.create({
   clearIcon: {
     paddingTop: 28,
     paddingRight: 20,
-    color: '#fff',
+    color: '#dadada',
   },
   searchContainer: {
     flexDirection: 'row',

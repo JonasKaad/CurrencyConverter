@@ -15,13 +15,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#a14e00',
     borderRadius: 10,
     paddingVertical: 6,
-    //paddingHorizontal: 12,
   },
   appButtonText: {
     fontSize: 18,
     color: '#fff',
     fontWeight: 'bold',
     alignSelf: 'center',
-    //textTransform: 'uppercase',
   },
 });
