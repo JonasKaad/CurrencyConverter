@@ -1,7 +1,6 @@
 import * as React from 'react';
 import {useState, useEffect} from 'react';
 import {
-  Button,
   Text,
   View,
   StyleSheet,
@@ -201,16 +200,16 @@ function HomeScreen({navigation}: any) {
       s.substring(0, 4);
     return s;
   }
-
   async function updateRates() {
     try {
       const url = 'https://cdn.forexvalutaomregner.dk/api/latest.json';
       let response = await fetch(url);
       let responseJson = await response.json();
       storeData(responseJson, '@Exchange');
-
       let s = responseJson.lastupdate;
       setUpdated(updateTimeString(s));
+      setExFromRate(responseJson.rates[exFromCurrency]);
+      setExToRate(responseJson.rates[exToCurrency]);
     } catch (error) {
       console.error(error);
     }
