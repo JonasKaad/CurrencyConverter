@@ -376,7 +376,7 @@ function HomeScreen({navigation}: any) {
       />
       <View style={styles.container}>
         <View style={[{width: '30%', margin: 10}]}>
-          <View style={[{alignSelf: 'center'}]}>
+          <View style={[{alignSelf: 'center', marginBottom: 5}]}>
             <Text style={styles.text}>Exchange From:</Text>
           </View>
           <AppButton
@@ -392,7 +392,7 @@ function HomeScreen({navigation}: any) {
           </TouchableOpacity>
         </View>
         <View style={[{width: '30%', margin: 10}]}>
-          <View style={[{alignSelf: 'center'}]}>
+          <View style={[{alignSelf: 'center', marginBottom: 5}]}>
             <Text style={styles.text}>Exchange To:</Text>
           </View>
           <AppButton
@@ -745,6 +745,7 @@ const styles = StyleSheet.create({
   taxStyle: {
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: 5,
   },
   ratesStyle: {
     alignItems: 'center',
