@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {useState, useEffect} from 'react';
+import {useState, useEffect, useCallback} from 'react';
 import {
   Text,
   View,
@@ -201,7 +201,8 @@ function HomeScreen({navigation}: any) {
       s.substring(0, 4);
     return s;
   }
-  async function updateRates() {
+
+  const updateRates = async () => {
     try {
       const url = 'https://cdn.moneyconvert.net/api/latest.json';
       let response = await fetch(url);
@@ -214,13 +215,20 @@ function HomeScreen({navigation}: any) {
     } catch (error) {
       console.error(error);
     }
-  }
-
-  function resetTextInput() {
-    onChangeNumber('');
-  }
-
+  };
   useEffect(setRatesUpdatedString, []);
+
+  useEffect(() => {
+    const checkAndUpdateRates = async () => {
+      const storedData = await getData();
+      if (!storedData) {
+        // Data not found in AsyncStorage, update rates
+        await updateRates();
+      }
+    };
+
+    checkAndUpdateRates();
+  }, []);
 
   function setRatesUpdatedString() {
     try {
