@@ -1,4 +1,5 @@
 import {TouchableOpacity, Text, StyleSheet} from 'react-native';
+import colors from '../constants/colors';
 
 const AppButton = ({onPress, title}: any) => (
   <TouchableOpacity onPress={onPress} style={styles.appButtonContainer}>
@@ -12,7 +13,7 @@ const styles = StyleSheet.create({
   // ...
   appButtonContainer: {
     elevation: 4,
-    backgroundColor: '#a14e00',
+    backgroundColor: colors.PRIMARY,
     borderRadius: 10,
     paddingVertical: 6,
   },

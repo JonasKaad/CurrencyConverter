@@ -21,6 +21,7 @@ import {createSlice, configureStore} from '@reduxjs/toolkit';
 import filter from 'lodash.filter';
 import {Dropdown} from 'react-native-element-dropdown';
 import AppButton from './components/AppButton';
+import colors from './constants/colors';
 const currencyNames = require('./data/currencies.json');
 const salesTaxes = require('./data/sales-tax.json');
 
@@ -202,7 +203,7 @@ function HomeScreen({navigation}: any) {
   }
   async function updateRates() {
     try {
-      const url = 'https://cdn.forexvalutaomregner.dk/api/latest.json';
+      const url = 'https://cdn.moneyconvert.net/api/latest.json';
       let response = await fetch(url);
       let responseJson = await response.json();
       storeData(responseJson, '@Exchange');
@@ -392,11 +393,11 @@ function HomeScreen({navigation}: any) {
           />
         </View>
       </View>
-      <View>
+      {/* <View>
         <View style={styles.taxStyle}>
           <BouncyCheckbox
             size={30}
-            fillColor="#a14e00"
+            fillColor=colors.PRIMARY
             unfillColor="#FFFFFF"
             text={checkValueIsNull() ? 'Choose state below' : 'Add sales tax'}
             iconStyle={{borderColor: 'blue'}}
@@ -435,7 +436,8 @@ function HomeScreen({navigation}: any) {
             dropDownFunc(item.value);
           }}
         />
-      </View>
+      </View> */}
+      <View style={[{marginTop: 60}]}></View>
       <View style={styles.ratesStyle}>
         <View style={[{width: '50%'}]}>
           <View style={styles.taxStyle}>
@@ -514,7 +516,7 @@ function ExchangeFromScreen(this: any, {navigation}: any) {
         <>
           <View
             style={{
-              backgroundColor: '#1E1E1E',
+              backgroundColor: colors.BACKGROUND,
               padding: 10,
               marginBottom: 10,
               borderRadius: 20,
@@ -528,7 +530,7 @@ function ExchangeFromScreen(this: any, {navigation}: any) {
               placeholder="Search..."
               placeholderTextColor="#dadada"
               style={{
-                backgroundColor: '#683200',
+                backgroundColor: colors.SECONDARY,
                 paddingHorizontal: 20,
                 fontSize: 20,
                 color: '#fff',
@@ -625,7 +627,7 @@ function ExchangeToScreen(this: any, {navigation}: any) {
         <>
           <View
             style={{
-              backgroundColor: '#1E1E1E',
+              backgroundColor: colors.BACKGROUND,
               padding: 10,
               marginBottom: 10,
               borderRadius: 20,
@@ -639,7 +641,7 @@ function ExchangeToScreen(this: any, {navigation}: any) {
               placeholder="Search..."
               placeholderTextColor="#dadada"
               style={{
-                backgroundColor: '#683200',
+                backgroundColor: colors.SECONDARY,
                 paddingHorizontal: 20,
                 fontSize: 20,
                 color: '#fff',
@@ -677,7 +679,7 @@ function MyStack() {
       screenOptions={{
         presentation: 'transparentModal',
         headerStyle: {
-          backgroundColor: '#a14e00',
+          backgroundColor: colors.PRIMARY,
         },
         headerTintColor: '#fff',
         headerTitleStyle: {
@@ -710,18 +712,18 @@ DropDownPicker.addTheme('MyThemeName', myTheme);
 DropDownPicker.setTheme('MyThemeName');
 DropDownPicker.setListMode('SCROLLVIEW'); //can be changed to MODAL
 
-StatusBar.setBackgroundColor('#a14e00');
+StatusBar.setBackgroundColor(colors.PRIMARY);
 const styles = StyleSheet.create({
   backgroundStyle: {
     flex: 1,
-    backgroundColor: '#1E1E1E',
+    backgroundColor: colors.BACKGROUND,
   },
   exchangeButtonsContainer: {
     alignItems: 'flex-start',
     justifyContent: 'space-evenly',
   },
   flatListStyle: {
-    backgroundColor: '#1E1E1E',
+    backgroundColor: colors.BACKGROUND,
   },
   exchangeStyle: {
     margin: 10,
@@ -789,7 +791,7 @@ const styles = StyleSheet.create({
     height: 50,
     alignSelf: 'center',
     width: '67%',
-    backgroundColor: '#a14e00',
+    backgroundColor: colors.PRIMARY,
     borderRadius: 12,
     padding: 12,
     shadowColor: '#000',
@@ -804,7 +806,7 @@ const styles = StyleSheet.create({
   },
   dropdownView: {},
   dropdownContainer: {
-    backgroundColor: '#a14e00',
+    backgroundColor: colors.PRIMARY,
     borderColor: '#683200',
     borderRadius: 12,
   },

@@ -9,4 +9,7 @@ export default {
   SHARK: '#242526',
   SHUTTLE_GREY: '#565E67',
   BROWN: '#a14e00',
+  PRIMARY: '#FF9A00',
+  SECONDARY: '#b26b00',
+  BACKGROUND: '#1f2a34',
 };
